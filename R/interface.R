@@ -10,8 +10,8 @@ fevd_spatial.formula <- function(
     kernel = c("spde", "matern", "exp"),
     reparam_s = c("zero", "unconstrained", "negative", "positive"),
     prior = list(),
-    init = NULL,
-    control = list()
+    control = list(),
+    init = NULL
   ){
   method <- match.arg(method)
   kernel <- match.arg(kernel)
@@ -46,7 +46,7 @@ fevd_spatial.formula <- function(
     )
   }
   ret <- c(ret, setNames(Xmats, paste0("X_", names(Xmats))))
-  mycall <- rlang::call2("spatialGEV_fit", !!!ret[c(1:6,9:12)], !!!ret$control, !!!ret$prior)
+  mycall <- rlang::call2("spatialGEV_fit", !!!ret[c(1:6,9:12)], !!!ret$control, !!!ret$prior, .ns = "SpatialGEV")
   fit <- eval(mycall)
   attr(fit, "formula") <- ret$formula
   attr(fit, "call") <- mycall
@@ -139,16 +139,6 @@ init_params <- function(x, random, kernel, use_fgev = TRUE){
   params
 }
 
-gen_prior <- function(...){
-  list(
-    nu              = 1,
-    s_prior         = NULL,
-    beta_prior      = NULL,
-    matern_pc_prior = NULL,
-
-  )
-}
-
 # Formula parsing helpsers -----------------------------------------------------
 
 expand_dot <- function(x){
@@ -157,6 +147,11 @@ expand_dot <- function(x){
   ret
 }
 
+#' Extract design matrix from all RHS random effect terms
+#'
+#' Extract the design matrix from the data.frame for all RHS random effect terms.
+#' For the spatial GEV model here, any RHS terms should consist solely of a single
+#' RE term, optionally with regression terms.
 regression_matrix <- function(x, data){
   f <- \(i){
     ret <- formula(x, lhs = 0, rhs = i)
@@ -170,7 +165,7 @@ regression_matrix <- function(x, data){
 }
 
 #' Extract the regression matrix component of a lme style random effect term
-#' i.e., the dots in ( ... | group). Returns a list with as many values as there
+#' i.e., the dots in ( ... | group). Returns a list of formulas with as many values as there
 #' are RE terms in the formula.
 get_design_formula <- function(x){
   bar <- lme4::findbars(x)
@@ -178,16 +173,3 @@ get_design_formula <- function(x){
   lapply(design, \(x) eval(call("~", x[[1]])))
 }
 
-# remove_bars <- function(x){
-#   f <- function(x){
-#     bar <- lme4::findbars(x)
-#     terms <- lapply(bar, rlang::call_args)
-#     terms <- lapply(terms, \(x) call("+", x[[1]], x[[2]]))
-#     lapply(terms, \(x) eval(call("~", x)))
-#   }
-#   n <- length(x)[2]
-#   for (i in 1:length(n)){
-#     sub <- formula(x, lhs = 0, rhs = i)
-#     update(sub, f(sub))
-#   }
-# }
