@@ -3,13 +3,13 @@
 \name{get_design_formula}
 \alias{get_design_formula}
 \title{Extract the regression matrix component of a lme style random effect term
-i.e., the dots in ( ... | group). Returns a list with as many values as there
+i.e., the dots in ( ... | group). Returns a list of formulas with as many values as there
 are RE terms in the formula.}
 \usage{
 get_design_formula(x)
 }
 \description{
 Extract the regression matrix component of a lme style random effect term
-i.e., the dots in ( ... | group). Returns a list with as many values as there
+i.e., the dots in ( ... | group). Returns a list of formulas with as many values as there
 are RE terms in the formula.
 }
